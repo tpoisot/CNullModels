@@ -41,18 +41,8 @@ int checkadj(int *adj, int nrow, int ncol) {
 	return noint;
 }
 
-void null_1(int *template, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
+void null_1(int L, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
 	int nc, nr;
-	// Check the total number of interactions
-	unsigned int L = 0;
-	int i;
-	for (i = 0; i < (nrow * ncol); ++i) {
-		// Loop through all interactions
-		if (template[i] == 1) {
-			++L;
-		}
-	}
-	// Assign global interaction probability
 	double Pint;
 	Pint = (double) L / (nrow * ncol);
 	// Loop through all the interactions
@@ -65,31 +55,8 @@ void null_1(int *template, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
 	}
 }
 
-void null_2(int *template, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
-	double *msRow = (double*) malloc(nrow * sizeof(double));
-	double *msCol = (double*) malloc(ncol * sizeof(double));
+void null_2(double *msRow, double *msCol, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
 	int nr, nc;
-	for (nr = 0; nr < nrow; ++nr) {
-		msRow[nr] = 0.0;
-	}
-	for (nc = 0; nc < ncol; ++nc) {
-		msCol[nc] = 0.0;
-	}
-	for (nr = 0; nr < nrow; ++nr) {
-		for (nc = 0; nc < ncol; ++nc) {
-			if (template[nc + nr * ncol] == 1) {
-				msRow[nr] += 1.0;
-				msCol[nc] += 1.0;
-			}
-		}
-	}
-	// Calculate the interaction probability per row and column
-	for (nr = 0; nr < nrow; ++nr) {
-		msRow[nr] = msRow[nr] / (double) ncol;
-	}
-	for (nc = 0; nc < ncol; ++nc) {
-		msCol[nc] = msCol[nc] / (double) nrow;
-	}
 	// Loop through all the interactions
 	for (nr = 0; nr < nrow; ++nr) {
 		for (nc = 0; nc < ncol; ++nc) {
@@ -128,16 +95,48 @@ int main(int argc, char *argv[]) {
 	dn1 = 0;
 	dn2 = 0;
 
-	// Read the template file and convert to adjacency matrix if needed
+	/*
+	 * Read the web and convert it to an adjacency matrix
+	 * Simultaneously, get the number of links and the
+	 * probability of interaction for each level
+	 * --
+	 * This should speed things up in the null1 and null2 functions
+	 */
 	int *web = (int*) malloc(ncol * nrow * sizeof(int));
+	double *msRow = (double*) malloc(nrow * sizeof(double));
+	double *msCol = (double*) malloc(ncol * sizeof(double));
+	unsigned int L = 0;
 	FILE *template;
 	template = fopen(argv[1], "rt");
 	int nc, nr;
+	// Set interaction proba to 0
+	for (nr = 0; nr < nrow; ++nr) {
+		msRow[nr] = 0.0;
+	}
+	for (nc = 0; nc < ncol; ++nc) {
+		msCol[nc] = 0.0;
+	}
+	// Loop through the text file and fill the matrix
 	for (nr = 0; nr < nrow; ++nr) {
 		for (nc = 0; nc < ncol; ++nc) {
 			fscanf(template, "%d", &web[nc + nr * ncol]);
-			web[nc + nr * ncol] = (web[nc + nr * ncol] > 0) ? 1 : 0;
+			if (web[nc + nr * ncol] > 0) {
+				msRow[nr] += 1.0;
+				msCol[nc] += 1.0;
+				web[nc + nr * ncol] = 1;
+				L += 1; // Increase the total number of interactions
+			}
 		}
+	}
+
+	printf("L: %d\n",L);
+
+	// Calculate the interaction probability per row and column
+	for (nr = 0; nr < nrow; ++nr) {
+		msRow[nr] = msRow[nr] / (double) ncol;
+	}
+	for (nc = 0; nc < ncol; ++nc) {
+		msCol[nc] = msCol[nc] / (double) nrow;
 	}
 	fclose(template);
 
@@ -155,7 +154,7 @@ int main(int argc, char *argv[]) {
 			for (i = 0; i < (nrow * ncol); ++i) {
 				t_n1[i] = 0;
 			}
-			null_1(web, nrow, ncol, t_n1, rng);
+			null_1(L, nrow, ncol, t_n1, rng);
 			if (checkadj(t_n1, nrow, ncol) == 0) {
 				char tfname[FNSIZE]; // The filename buffer.
 				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n1_%i.txt", argv[1], dn1);
@@ -177,7 +176,7 @@ int main(int argc, char *argv[]) {
 			for (i = 0; i < (nrow * ncol); ++i) {
 				t_n2[i] = 0;
 			}
-			null_2(web, nrow, ncol, t_n2, rng);
+			null_2(msRow, msCol, nrow, ncol, t_n2, rng);
 			if (checkadj(t_n2, nrow, ncol) == 0) {
 				char tfname[FNSIZE]; // The filename buffer.
 				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n2_%i.txt", argv[1], dn1);
