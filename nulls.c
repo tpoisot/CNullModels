@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
 			null_3c(msCol, nrow, ncol, t_n3c, rng);
 			if (checkadj(t_n3c, nrow, ncol) == 0) {
 				char tfname[FNSIZE]; // The filename buffer.
-				snprintf(tfname, sizeof(char) * FNSIZE, "%s_3c_%i.txt", argv[1], dn3c);
+				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n3c_%i.txt", argv[1], dn3c);
 				n3Cout = fopen(tfname, "w");
 				for (nr = 0; nr < nrow; ++nr) {
 					for (nc = 0; nc < ncol; ++nc) {
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
 					null_3r(msRow, nrow, ncol, t_n3r, rng);
 					if (checkadj(t_n3r, nrow, ncol) == 0) {
 						char tfname[FNSIZE]; // The filename buffer.
-						snprintf(tfname, sizeof(char) * FNSIZE, "%s_3r_%i.txt", argv[1], dn3r);
+						snprintf(tfname, sizeof(char) * FNSIZE, "%s_n3r_%i.txt", argv[1], dn3r);
 						n3Rout = fopen(tfname, "w");
 						for (nr = 0; nr < nrow; ++nr) {
 							for (nc = 0; nc < ncol; ++nc) {
