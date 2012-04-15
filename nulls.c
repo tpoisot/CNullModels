@@ -67,6 +67,30 @@ void null_2(double *msRow, double *msCol, int nrow, int ncol, int *nullweb, gsl_
 	}
 }
 
+void null_3c(double *msCol, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
+	int nr, nc;
+	// Loop through all the interactions
+	for (nr = 0; nr < nrow; ++nr) {
+		for (nc = 0; nc < ncol; ++nc) {
+			if (gsl_rng_uniform(rng) <= msCol[nc]) {
+				nullweb[nc + nr * ncol] = 1;
+			}
+		}
+	}
+}
+
+void null_3r(double *msRow, int nrow, int ncol, int *nullweb, gsl_rng *rng) {
+	int nr, nc;
+	// Loop through all the interactions
+	for (nr = 0; nr < nrow; ++nr) {
+		for (nc = 0; nc < ncol; ++nc) {
+			if (gsl_rng_uniform(rng) <= msRow[nr]) {
+				nullweb[nc + nr * ncol] = 1;
+			}
+		}
+	}
+}
+
 int main(int argc, char *argv[]) {
 	clock_t start, stop;
 	// Initiate the GSL random number generator
@@ -90,10 +114,12 @@ int main(int argc, char *argv[]) {
 	maxiter = atoi(argv[5]);
 
 	// Number of success and trials
-	int iter, dn1, dn2;
+	unsigned int iter, dn1, dn2, dn3c, dn3r;
 	iter = 0;
 	dn1 = 0;
 	dn2 = 0;
+	dn3c = 0;
+	dn3r = 0;
 
 	/*
 	 * Read the web and convert it to an adjacency matrix
@@ -141,11 +167,13 @@ int main(int argc, char *argv[]) {
 	// Pointers to output files
 	FILE *n1out;
 	FILE *n2out;
+	FILE *n3Cout;
+	FILE *n3Rout;
 
 	// Start the iterations
 	start = clock();
 	int i;
-	while ((iter < maxiter) & ((dn1 < target) | (dn2 < target))) {
+	while ((iter < maxiter) & ((dn1 < target) | (dn2 < target) | (dn3c < target) | (dn3r < target))) {
 		++iter;
 		if (dn1 < target) {
 			int* t_n1 = (int*) malloc(nrow * ncol * sizeof(int));
@@ -177,7 +205,7 @@ int main(int argc, char *argv[]) {
 			null_2(msRow, msCol, nrow, ncol, t_n2, rng);
 			if (checkadj(t_n2, nrow, ncol) == 0) {
 				char tfname[FNSIZE]; // The filename buffer.
-				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n2_%i.txt", argv[1], dn1);
+				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n2_%i.txt", argv[1], dn2);
 				n2out = fopen(tfname, "w");
 				for (nr = 0; nr < nrow; ++nr) {
 					for (nc = 0; nc < ncol; ++nc) {
@@ -190,10 +218,54 @@ int main(int argc, char *argv[]) {
 			}
 			free(t_n2);
 		}
+
+		if (dn3c < target) {
+			int* t_n3c = (int*) malloc(nrow * ncol * sizeof(int));
+			for (i = 0; i < (nrow * ncol); ++i) {
+				t_n3c[i] = 0;
+			}
+			null_3c(msCol, nrow, ncol, t_n3c, rng);
+			if (checkadj(t_n3c, nrow, ncol) == 0) {
+				char tfname[FNSIZE]; // The filename buffer.
+				snprintf(tfname, sizeof(char) * FNSIZE, "%s_3c_%i.txt", argv[1], dn3c);
+				n3Cout = fopen(tfname, "w");
+				for (nr = 0; nr < nrow; ++nr) {
+					for (nc = 0; nc < ncol; ++nc) {
+						fprintf(n3Cout, "%d ", t_n3c[nc + nr * ncol]);
+					}
+					fprintf(n3Cout, "\n");
+				}
+				fclose(n3Cout);
+				++dn3c;
+			}
+			free(t_n3c);
+		}
+
+		if (dn3r < target) {
+					int* t_n3r = (int*) malloc(nrow * ncol * sizeof(int));
+					for (i = 0; i < (nrow * ncol); ++i) {
+						t_n3r[i] = 0;
+					}
+					null_3r(msRow, nrow, ncol, t_n3r, rng);
+					if (checkadj(t_n3r, nrow, ncol) == 0) {
+						char tfname[FNSIZE]; // The filename buffer.
+						snprintf(tfname, sizeof(char) * FNSIZE, "%s_3r_%i.txt", argv[1], dn3r);
+						n3Rout = fopen(tfname, "w");
+						for (nr = 0; nr < nrow; ++nr) {
+							for (nc = 0; nc < ncol; ++nc) {
+								fprintf(n3Rout, "%d ", t_n3r[nc + nr * ncol]);
+							}
+							fprintf(n3Rout, "\n");
+						}
+						fclose(n3Rout);
+						++dn3r;
+					}
+					free(t_n3r);
+				}
 	}
 	stop = clock();
 
-	printf("%d type I and %d type II webs generated in %f s (%d iterations).\n", dn1, dn2, (stop - start) / (float) CLOCKS_PER_SEC, iter);
+	printf("%d type I, %d type II, %d type III (col) and %d type III (row) webs generated in %f s (%d iterations).\n", dn1, dn2, dn3c, dn3r, (stop - start) / (float) CLOCKS_PER_SEC, iter);
 
 	gsl_rng_free(rng);
 	free(web);
