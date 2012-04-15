@@ -1,0 +1,9 @@
+# Null models of bipartite network structure in C
+
+Timothée Poisot - timothee.poisot@uqar.ca
+
+Requires the C GSL library
+
+Compile with ```gcc nulls.c -o nm -lgsl -lgslcblas -O3 -DHAVE_INLINE```
+
+Run with ```./nm test.txt 10 10 1000 2000```
