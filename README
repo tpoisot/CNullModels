@@ -6,4 +6,12 @@ Requires the C GSL library
 
 Compile with ```gcc nulls.c -o nm -lgsl -lgslcblas -O3 -DHAVE_INLINE```
 
-Run with ```./nm test.txt 10 10 1000 2000```
+Run with ```./nm test.txt 3 7 1000 2000```
+
+## Arguments
+
+1. web file
+1. number of columns
+1. number of rows
+1. target number of replicates
+1. maximal number of iterations 
