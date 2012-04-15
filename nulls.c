@@ -129,8 +129,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	printf("L: %d\n",L);
-
 	// Calculate the interaction probability per row and column
 	for (nr = 0; nr < nrow; ++nr) {
 		msRow[nr] = msRow[nr] / (double) ncol;
