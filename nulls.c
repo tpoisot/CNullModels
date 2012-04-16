@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 	// Start the iterations
 	start = clock();
 	int i;
-	while ((iter < maxiter) & ((dn1 < target) | (dn2 < target) | (dn3c < target) | (dn3r < target))) {
+	while ((iter < maxiter) && ((dn1 < target) || (dn2 < target) || (dn3c < target) || (dn3r < target))) {
 		++iter;
 		if (dn1 < target) {
 			int* t_n1 = (int*) malloc(nrow * ncol * sizeof(int));
@@ -242,30 +242,31 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (dn3r < target) {
-					int* t_n3r = (int*) malloc(nrow * ncol * sizeof(int));
-					for (i = 0; i < (nrow * ncol); ++i) {
-						t_n3r[i] = 0;
+			int* t_n3r = (int*) malloc(nrow * ncol * sizeof(int));
+			for (i = 0; i < (nrow * ncol); ++i) {
+				t_n3r[i] = 0;
+			}
+			null_3r(msRow, nrow, ncol, t_n3r, rng);
+			if (checkadj(t_n3r, nrow, ncol) == 0) {
+				char tfname[FNSIZE]; // The filename buffer.
+				snprintf(tfname, sizeof(char) * FNSIZE, "%s_n3r_%i.txt", argv[1], dn3r);
+				n3Rout = fopen(tfname, "w");
+				for (nr = 0; nr < nrow; ++nr) {
+					for (nc = 0; nc < ncol; ++nc) {
+						fprintf(n3Rout, "%d ", t_n3r[nc + nr * ncol]);
 					}
-					null_3r(msRow, nrow, ncol, t_n3r, rng);
-					if (checkadj(t_n3r, nrow, ncol) == 0) {
-						char tfname[FNSIZE]; // The filename buffer.
-						snprintf(tfname, sizeof(char) * FNSIZE, "%s_n3r_%i.txt", argv[1], dn3r);
-						n3Rout = fopen(tfname, "w");
-						for (nr = 0; nr < nrow; ++nr) {
-							for (nc = 0; nc < ncol; ++nc) {
-								fprintf(n3Rout, "%d ", t_n3r[nc + nr * ncol]);
-							}
-							fprintf(n3Rout, "\n");
-						}
-						fclose(n3Rout);
-						++dn3r;
-					}
-					free(t_n3r);
+					fprintf(n3Rout, "\n");
 				}
+				fclose(n3Rout);
+				++dn3r;
+			}
+			free(t_n3r);
+		}
 	}
 	stop = clock();
 
-	printf("%d type I, %d type II, %d type III (col) and %d type III (row) webs generated in %f s (%d iterations).\n", dn1, dn2, dn3c, dn3r, (stop - start) / (float) CLOCKS_PER_SEC, iter);
+	printf("%d type I, %d type II, %d type III (col) and %d type III (row) webs generated in %f s (%d iterations).\n", dn1, dn2, dn3c, dn3r,
+			(stop - start) / (float) CLOCKS_PER_SEC, iter);
 
 	gsl_rng_free(rng);
 	free(web);
