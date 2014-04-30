@@ -4,7 +4,11 @@ Timothée Poisot - timothee.poisot@uqar.ca
 
 Requires the C GSL library
 
-Compile with ```gcc nulls.c -o nm -lgsl -lgslcblas -O3 -DHAVE_INLINE```
+Compile with `make`, or just run
+
+~~~ bash
+gcc nulls.c -o nm -lgsl -lgslcblas -O3 -DHAVE_INLINE
+~~~
 
 Run with ```./nm test.txt 3 7 1000 2000```
 
